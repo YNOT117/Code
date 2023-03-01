@@ -1,11 +1,11 @@
 #include <Arduino.h>
 /** Configuracion de internet **/
-#define SSID    "Chekov"//"Rectoria" //"Discovery117_2.4Gnormal" //"Chekov" //"Enterprise117"
+#define SSID    "Enterprise117"//"Rectoria" //"Discovery117_2.4Gnormal" //"Chekov" //"Enterprise117"
 #define PASS    "ChinoLoko69" //"ChinoLoko69" //"recsec2015"
 
 /* Configuracion de la base de datos en tiempo real*/
-#define SECRET_DB "gNZew0dQoUAOq9bxTC1ikLvbQeRd5uKSP7My6Qf1"
-#define DATABASE_URL "testesp32-fab17-default-rtdb.firebaseio.com" 
+#define SECRET_DB "3odoh4siRfMQBIJh1eLTrGu1T2TY5xNvYOJ9K8ME" // Test "gNZew0dQoUAOq9bxTC1ikLvbQeRd5uKSP7My6Qf1"
+#define DATABASE_URL "disp-61a32-default-rtdb.firebaseio.com" // Test "testesp32-fab17-default-rtdb.firebaseio.com" 
 
 /* Host para hacer ping y verificar la conexion a internet */
 #define HOST "www.google.com"

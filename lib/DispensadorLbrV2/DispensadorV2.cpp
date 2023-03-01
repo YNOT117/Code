@@ -55,16 +55,24 @@ void DispensadorV2::begin(){
     Serial.println("~ Configuraciones ~");
     /** Inicializar expansores **/
     /** Las salidas estan negadas, por eso se inicializa con un HIGH**/
-    Botones.begin( )==true?Serial.println("Expansor Botones - CONECTADO"):Serial.println("Expansor Botones - NO CONECTADO");
-    Botones2.begin( )==true?Serial.println("Expansor Botones - CONECTADO"):Serial.println("Expansor Botones - NO CONECTADO");
     Bombas.begin(HIGH)==true?Serial.println("Expansor Bombas - CONECTADO"):Serial.println("Expansor Bombas - NO CONECTADO");
-    Bombas2.begin(HIGH)==true?Serial.println("Expansor Bombas - CONECTADO"):Serial.println("Expansor Bombas - NO CONECTADO");
-    
-    Serial.println("Apagar bombas");
     for(uint8_t bomb=0; bomb<8; bomb++){
         Bombas.write(bomb, HIGH);
+    }
+    Bombas2.begin(HIGH)==true?Serial.println("Expansor Bombas 2 - CONECTADO"):Serial.println("Expansor Bombas 2 - NO CONECTADO");
+    Serial.println("Apagar bombas");
+    for(uint8_t bomb=0; bomb<8; bomb++){
         Bombas2.write(bomb, HIGH);
     }
+    
+    Botones.begin( )==true?Serial.println("Expansor Botones - CONECTADO"):Serial.println("Expansor Botones - NO CONECTADO");
+    Botones.setButtonMask(0xFF);
+    Botones.selectAll();
+    
+    Botones2.begin( )==true?Serial.println("Expansor Botones 2 - CONECTADO"):Serial.println("Expansor Botones 2 - NO CONECTADO");
+    Botones2.setButtonMask(0xFF);
+    Botones2.selectAll();
+    
 
     Serial.println("Inicializar display");
     /** Inicializar display LCD **/
@@ -181,8 +189,8 @@ bool DispensadorV2::statusWiFi(){
     _PingConexionInternet = _PingConexionInternet?Ping.ping(HOST, 1):false;
 
     /* Hacemos un timeout para el ping si se tarda mas de 50ms da por hecho que no hay internet */
-    Serial.print("Tiempo: ");
-    Serial.println((millis()-_TiempoDeEspera)/1000.0000);
+    // Serial.print("Tiempo: ");
+    // Serial.println((millis()-_TiempoDeEspera)/1000.0000);
     if(_PingConexionInternet){
         if (millis() - _TiempoDeEspera >= 200){
             Serial.println("Estado de ESP32: No conectado a internet");
@@ -230,6 +238,7 @@ bool DispensadorV2::reconectToInternet(){
 
 
 void DispensadorV2::isDataBaseChange(){
+
     if(millis() > _TiempoParaLecturaDB + TiempoDeLectura){
         if(statusWiFi()){
             if(Firebase.readStream(firebaseData)){
@@ -427,9 +436,18 @@ void DispensadorV2::resetPCF(){
 }
 
 void DispensadorV2::readBotones(){
-    if(Botones.read8() != 255){
+
+
+    Botones.readButton8();
+    Botones2.readButton8();
+    Serial.print("Btn value: ");
+    Serial.println(Botones.value());
+    Serial.print("Btn 2 value: ");
+    Serial.println(Botones2.value());
+    
+    
+    if(Botones.value() != 255){
         _ProductoSeleccionado = Botones.value();
-        Botones.selectAll();
         switch (_ProductoSeleccionado){
         case 254:
             _ProductoSeleccionado = 0;
@@ -463,9 +481,8 @@ void DispensadorV2::readBotones(){
         Serial.println(_ProductoSeleccionado+1);
         //Serial.println(_Productos[_ProductoSeleccionado].getNombre());
     }
-    if(Botones2.read8() != 255){
+    if(Botones2.value() != 255){
         _ProductoSeleccionado = Botones2.value();
-        Botones2.selectAll();
         switch (_ProductoSeleccionado){
         case 254:
             _ProductoSeleccionado = 8;
@@ -525,7 +542,7 @@ void DispensadorV2::startCalibracion(){
         i = 1000;
         if(_ProductoSeleccionado<8){
             /* Encender bomba del 0-7*/
-            Bombas.write(_ProductoSeleccionado, HIGH);
+            Bombas.write(_ProductoSeleccionado, LOW);
             _TiempoDeCalibracion = millis();
             while(!Botones.read(_ProductoSeleccionado)){
                 Display.setCursor(6, 1);
@@ -536,14 +553,14 @@ void DispensadorV2::startCalibracion(){
                 }
             }
             /* Apagar bombga del 0-7*/
-            Bombas.write(_ProductoSeleccionado, LOW);
+            Bombas.write(_ProductoSeleccionado, HIGH);
         }
         /* Productos del 8 - 15*/
         if(_ProductoSeleccionado>7){ 
             /* Restamos 8 para empezar desde cero*/
             _ProductoSeleccionado-=8;
             /* Encender bomba del 8 - 15 */
-            Bombas2.write(_ProductoSeleccionado, HIGH);
+            Bombas2.write(_ProductoSeleccionado, LOW);
             _TiempoDeCalibracion = millis();
             while(!Botones2.read((_ProductoSeleccionado))){
                 Display.setCursor(6, 1);
@@ -554,7 +571,7 @@ void DispensadorV2::startCalibracion(){
                 }
             }
             /* Apagar bomba del 8 - 15 */
-            Bombas2.write(_ProductoSeleccionado, LOW);
+            Bombas2.write(_ProductoSeleccionado, HIGH);
             _ProductoSeleccionado+=8;
         }
         Serial.println("]");
@@ -756,7 +773,7 @@ void DispensadorV2::mensajeDeBienvenida(){
 }
 
 void DispensadorV2::activarInterrupciones(){
-    attachInterrupt(digitalPinToInterrupt(PinBotones), seleccionProducto, FALLING); // Cualquier flanco 
+    attachInterrupt(digitalPinToInterrupt(PinBotones), seleccionProducto, FALLING); // Flanco de bajada 
     attachInterrupt(digitalPinToInterrupt(PinMonedero), agregarCredito, FALLING); // Flanco de bajada
     
 }

@@ -13,7 +13,7 @@
 #include <Arduino.h>
 #include <DispensadorV2.h>
 
-DispensadorV2 Dispensador("Test", nombreDelDispensador, cantidadDeProductos);
+DispensadorV2 Dispensador("Edgar", nombreDelDispensador, cantidadDeProductos);
 TaskHandle_t Task1;
 void Task1code( void * pvParameters );
 
@@ -25,6 +25,7 @@ void setup(){
     
     if(digitalRead(PinCalibracion)){
         /* Modo normal */
+        Dispensador.setCalibracion(false);
         Serial.println("~~ MODO DESPACHADOR ~~");
         Dispensador.mensajeDeBienvenida();
         Dispensador.mostrarCredito();
